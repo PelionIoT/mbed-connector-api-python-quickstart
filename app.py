@@ -5,41 +5,38 @@
 # 4) Put in API token from https://connector.mbed.com/#accesskeys
 # 5) Run app
 # 6) Go to the address that pops up to see it run!
-import web				# web.py framework for hosting webpages
-import mdc_api 			# mbed Device Connector library
-import json
-import pybars 			# use to fill in handlebar templates
 import socketio  # socket-io library
+import eventlet
+from flask import Flask # web.py framework for hosting webpages
+import mdc_api 			# mbed Device Connector library
+import pybars 			# use to fill in handlebar templates
 
 sio = socketio.Server()
+app = Flask(__name__)
 
-# map URL to class to handle requests
-urls = (
-	'/', 'index',
-)
 
 token = "Change Me" # replace with your API token
 connector = mdc_api.connector(token)
 
-class index:
-	def GET(self):
-		# get list of endpoints, for each endpoint get the pattern (/3201/0/5853) value
-		epList = connector.getEndpoints().result
-		for index in range(len(epList)):
-			print epList[index]['name']
-			e = connector.getResourceValue(epList[index]['name'],"/3201/0/5853")
-			while not e.isDone():
-				None
-			epList[index]['blinkPattern'] = e.result
-		print epList
-		#epList = {'endpoints':[{'name':'test1','blinkPattern':'500:500:500:600'},{'name':'test2','blinkPattern':'panumba'}]}
-		
-		# fill out html using handlebar template
-		handlebarJSON = {'endpoints':epList}
-		comp = pybars.Compiler()
-		source = unicode(open("./views/index.hbs",'r').read())
-		template = comp.compile(source)
-		return "".join(template(handlebarJSON))
+@app.route('/')
+def index():
+	# get list of endpoints, for each endpoint get the pattern (/3201/0/5853) value
+	epList = connector.getEndpoints().result
+	for index in range(len(epList)):
+		print epList[index]['name']
+		e = connector.getResourceValue(epList[index]['name'],"/3201/0/5853")
+		while not e.isDone():
+			None
+		epList[index]['blinkPattern'] = e.result
+	print epList
+	#epList = {'endpoints':[{'name':'test1','blinkPattern':'500:500:500:600'},{'name':'test2','blinkPattern':'panumba'}]}
+	
+	# fill out html using handlebar template
+	handlebarJSON = {'endpoints':epList}
+	comp = pybars.Compiler()
+	source = unicode(open("./views/index.hbs",'r').read())
+	template = comp.compile(source)
+	return "".join(template(handlebarJSON))
 
 @sio.on('connect')
 def connect(sid, environ):
@@ -68,20 +65,9 @@ def blink(sid, data):
 # 'notifications' are routed here
 def notificationHandler(data):
 	print "\r\nNotification Data Received :\r\n %s" %data['notifications']
-	
-class getEndpoints:
-	def GET(self):
-		e = connector.getEndpoints();
-		while not e.isDone():
-			None
-		if e.error:
-			return e.error.errType
-		else:
-			return e.result
-
 
 if __name__ == "__main__":
-	app = web.application(urls, globals())
-	app.run()
-	connector.startLongPolling()
-	connector.setHandler('notifications', notificationHandler) # send 'notifications' to the notificationHandler FN
+	app = socketio.Middleware(sio, app)							# wrap Flask application with socketio's middleware
+	eventlet.wsgi.server(eventlet.listen(('', 8080)), app) 		# deploy as an eventlet WSGI server
+	connector.startLongPolling()								# start long polling connector.mbed.com
+	connector.setHandler('notifications', notificationHandler) 	# send 'notifications' to the notificationHandler FN
