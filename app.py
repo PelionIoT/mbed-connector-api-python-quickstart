@@ -1,10 +1,3 @@
-# Steps to get this running
-# 1) run `sudo pip install -U requests[security] web.py` to install ssl capablities and the web.py framework
-# 2) install the mbed connector module (TODO: publish it and make it not copy / paste)
-# 3) Share the project app externally (top right corner, Share-> Application -> [*] Public
-# 4) Put in API token from https://connector.mbed.com/#accesskeys
-# 5) Run app
-# 6) Go to the address that pops up to see it run!
 import socketio  # socket-io library
 import eventlet
 from flask import Flask # web.py framework for hosting webpages
@@ -15,8 +8,9 @@ sio = socketio.Server()
 app = Flask(__name__)
 
 
-token = "Change Me" # replace with your API token
+token = "ChangeMe" # replace with your API token
 connector = mdc_api.connector(token)
+connector.startLongPolling()
 
 @app.route('/')
 def index():
@@ -40,27 +34,49 @@ def index():
 
 @sio.on('connect')
 def connect(sid, environ):
-    print('connect ', sid)
+	print('connect ', sid)
+	sio.enter_room(sid,'globalRoom')
 
-@sio.on('subscribe-to-presses')
+@sio.on('subscribe_to_presses')
 def subscribeToPresses(sid, data):
-    print('subscribe-to-presses: ', data)	
+    print('subscribe_to_presses: ',sid, data)	
 
-@sio.on('unsubscribe-to-presses')
+@sio.on('unsubscribe_to_presses')
 def unsubscribeToPresses(sid, data):
-    print('unsubscribe-to-presses: ', data)
+    print('unsubscribe_to_presses: ',sid, data)
     
-@sio.on('get-presses')
+@sio.on('get_presses')
 def getPresses(sid, data):
-    print('get-presses ', data)
+	# Read data from GET resource /3200/0/5501 (num button presses)
+	print("get_presses ",sid,data)
+	e = connector.getResourceValue(data['endpointName'],'/3200/0/5501')
+	while not e.isDone():
+		None
+	if e.error:
+		print("Error: ",e.error.errType, e.error.error, e.raw_data)
+	else:
+		sio.emit('presses',{"endpointName":data['endpointName'],"value":e.result},room='globalRoom')
     
-@sio.on('update-blink-pattern')
+@sio.on('update_blink_pattern')
 def updateBlinkPattern(sid, data):
-    print('message ', data)
+	# Set data on PUT resource /3201/0/5853 (pattern of LED blink)
+    print('update_blink_pattern ',sid, data)
+    e = connector.putResourceValue(data['endpointName'],'/3201/0/5853',data['blinkPattern'])
+    while not e.isDone():
+    	None
+    if e.error:
+	    print("Error: ",e.error.errType, e.error.error, e.raw_data)
+    	
 
 @sio.on('blink')
 def blink(sid, data):
-    print('blink: ', data)
+	# Trigger POST resource /3201/0/5850 (start blinking LED)
+    print('blink: ',sid, data)
+    e = connector.postResource(data['endpointName'],'/3201/0/5850')
+    while not e.isDone():
+    	None
+    if e.error:
+    	print("Error: ",e.error.errType, e.error.error, e.raw_data)
 
 # 'notifications' are routed here
 def notificationHandler(data):
@@ -69,5 +85,5 @@ def notificationHandler(data):
 if __name__ == "__main__":
 	app = socketio.Middleware(sio, app)							# wrap Flask application with socketio's middleware
 	eventlet.wsgi.server(eventlet.listen(('', 8080)), app) 		# deploy as an eventlet WSGI server
-	connector.startLongPolling()								# start long polling connector.mbed.com
+	#connector.startLongPolling()								# start long polling connector.mbed.com
 	connector.setHandler('notifications', notificationHandler) 	# send 'notifications' to the notificationHandler FN

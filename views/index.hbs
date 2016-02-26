@@ -75,19 +75,19 @@
           _this.find('.subscribe-presses').change(function() {
             if ($(this).is(":checked")) {
               _this.find('.get-presses').prop('disabled', true);
-              socket.emit('subscribe-to-presses', {
+              socket.emit('subscribe_to_presses', {
                 endpointName: _this.attr('id')
               });
             } else {
               _this.find('.get-presses').prop('disabled', false);
-              socket.emit('unsubscribe-to-presses', {
+              socket.emit('unsubscribe_to_presses', {
                 endpointName: _this.attr('id')
               });
             }
           });
 
           _this.find('.get-presses').on('click', function() {
-            socket.emit('get-presses', {
+            socket.emit('get_presses', {
               endpointName: _this.attr('id')
             });
           });
@@ -97,7 +97,7 @@
           })
 
           _this.find('.update-blink-pattern').on('click', function() {
-            socket.emit('update-blink-pattern', {
+            socket.emit('update_blink_pattern', {
               endpointName: _this.attr('id'),
               blinkPattern: _this.find('.blink-pattern').val()
             });
