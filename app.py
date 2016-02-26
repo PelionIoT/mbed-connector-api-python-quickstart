@@ -8,8 +8,6 @@ from base64 import standard_b64decode as b64decode
 sio = socketio.Server()
 app = Flask(__name__)
 
-g_sid = ""
-
 token = "ChangeMe" # replace with your API token
 connector = mdc_api.connector(token)
 
@@ -35,10 +33,8 @@ def index():
 
 @sio.on('connect')
 def connect(sid, environ):
-	global g_sid
 	print('connect ', sid)
 	sio.enter_room(sid,'globalRoom')
-	g_sid = sid
 
 @sio.on('subscribe_to_presses')
 def subscribeToPresses(sid, data):
@@ -100,20 +96,19 @@ def blink(sid, data):
     if e.error:
     	print("Error: ",e.error.errType, e.error.error, e.raw_data)
 
-# 'notifications' are routed here
+# 'notifications' are routed here, handle subscriptions and update webpage
 def notificationHandler(data):
-	print "\r\nNotification Data Received :\r\n %s" %data['notifications']
+	print "\r\nNotification Data Received : %s" %data['notifications']
 	notifications = data['notifications']
 	constructedList = {}
 	for thing in notifications:
 		ep = thing['ep']
 		emit = {"endpointName":thing["ep"],"value":b64decode(thing["payload"])}
 		print emit
-		print str(g_sid)
-		sio.emit('presses',emit,room=str(g_sid))
+		sio.emit('presses',emit,room='globalRoom')
 
 if __name__ == "__main__":
-	connector.deleteAllSubscriptions()
+	#connector.deleteAllSubscriptions()
 	connector.startLongPolling()								# start long polling connector.mbed.com
 	connector.setHandler('notifications', notificationHandler) 	# send 'notifications' to the notificationHandler FN
 	app = socketio.Middleware(sio, app)							# wrap Flask application with socketio's middleware
