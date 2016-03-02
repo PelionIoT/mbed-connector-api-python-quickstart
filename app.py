@@ -1,7 +1,7 @@
 import socketio  # socket-io library
 import eventlet
 from flask import Flask # web.py framework for hosting webpages
-import mdc_api 			# mbed Device Connector library
+import mbed_connector_api 			# mbed Device Connector library
 import pybars 			# use to fill in handlebar templates
 from base64 import standard_b64decode as b64decode
 
@@ -9,7 +9,7 @@ sio = socketio.Server()
 app = Flask(__name__)
 
 token = "ChangeMe" # replace with your API token
-connector = mdc_api.connector(token)
+connector = mbed_connector_api.connector(token)
 
 @app.route('/')
 def index():
