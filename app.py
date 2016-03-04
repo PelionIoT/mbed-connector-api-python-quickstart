@@ -1,12 +1,11 @@
-import socketio  # socket-io library
-import eventlet
-from flask import Flask # web.py framework for hosting webpages
-import mbed_connector_api 			# mbed Device Connector library
-import pybars 			# use to fill in handlebar templates
-from base64 import standard_b64decode as b64decode
+import mbed_connector_api 				# mbed Device Connector library
+import pybars 							# use to fill in handlebar templates
+from   flask 			import Flask	# framework for hosting webpages
+from   flask_socketio 	import SocketIO, emit,send,join_room, leave_room  
+from   base64 			import standard_b64decode as b64decode
 
-sio = socketio.Server()
 app = Flask(__name__)
+socketio = SocketIO(app,async_mode='threading')
 
 token = "ChangeMe" # replace with your API token
 connector = mbed_connector_api.connector(token)
@@ -16,14 +15,12 @@ def index():
 	# get list of endpoints, for each endpoint get the pattern (/3201/0/5853) value
 	epList = connector.getEndpoints().result
 	for index in range(len(epList)):
-		print epList[index]['name']
+		print "Endpoint Found: ",epList[index]['name']
 		e = connector.getResourceValue(epList[index]['name'],"/3201/0/5853")
 		while not e.isDone():
 			None
 		epList[index]['blinkPattern'] = e.result
-	print epList
-	#epList = {'endpoints':[{'name':'test1','blinkPattern':'500:500:500:600'},{'name':'test2','blinkPattern':'panumba'}]}
-	
+	print "Endpoint List :",epList
 	# fill out html using handlebar template
 	handlebarJSON = {'endpoints':epList}
 	comp = pybars.Compiler()
@@ -31,15 +28,20 @@ def index():
 	template = comp.compile(source)
 	return "".join(template(handlebarJSON))
 
-@sio.on('connect')
-def connect(sid, environ):
-	print('connect ', sid)
-	sio.enter_room(sid,'globalRoom')
+@socketio.on('connect')
+def connect():
+	print('connect ')
+	join_room('room')
 
-@sio.on('subscribe_to_presses')
-def subscribeToPresses(sid, data):
+@socketio.on('disconnect')
+def disconnect():
+	print('Disconnect')
+	leave_room('room')
+
+@socketio.on('subscribe_to_presses')
+def subscribeToPresses(data):
 	# Subscribe to all changes of resource /3200/0/5501 (button presses)
-	print('subscribe_to_presses: ',sid, data)
+	print('subscribe_to_presses: ',data)
 	e = connector.putResourceSubscription(data['endpointName'],'/3200/0/5501')
 	while not e.isDone():
 		None
@@ -47,11 +49,11 @@ def subscribeToPresses(sid, data):
 		print("Error: ",e.error.errType, e.error.error, e.raw_data)
 	else:
 		print("Subscribed Successfully!")
-		sio.emit('subscribed-to-presses',{"endpointName":data['endpointName'],"value":'True'})
+		emit('subscribed-to-presses')
 
-@sio.on('unsubscribe_to_presses')
-def unsubscribeToPresses(sid, data):
-	print('unsubscribe_to_presses: ',sid, data)
+@socketio.on('unsubscribe_to_presses')
+def unsubscribeToPresses(data):
+	print('unsubscribe_to_presses: ',data)
 	e = connector.deleteResourceSubscription(data['endpointName'],'/3200/0/5501')
 	while not e.isDone():
 		None
@@ -59,12 +61,12 @@ def unsubscribeToPresses(sid, data):
 		print("Error: ",e.error.errType, e.error.error, e.raw_data)
 	else:
 		print("Unsubscribed Successfully!")
-		sio.emit('unsubscribed-to-presses',{"endpointName":data['endpointName'],"value":'True'})
+	emit('unsubscribed-to-presses',{"endpointName":data['endpointName'],"value":'True'})
     
-@sio.on('get_presses')
-def getPresses(sid, data):
+@socketio.on('get_presses')
+def getPresses(data):
 	# Read data from GET resource /3200/0/5501 (num button presses)
-	print("get_presses ",sid,data)
+	print("get_presses ",data)
 	e = connector.getResourceValue(data['endpointName'],'/3200/0/5501')
 	while not e.isDone():
 		None
@@ -73,12 +75,12 @@ def getPresses(sid, data):
 	else:
 		data_to_emit = {"endpointName":data['endpointName'],"value":e.result}
 		print data_to_emit
-		sio.emit('presses', data_to_emit,room='globalRoom')
+		emit('presses', data_to_emit)
     
-@sio.on('update_blink_pattern')
-def updateBlinkPattern(sid, data):
+@socketio.on('update_blink_pattern')
+def updateBlinkPattern(data):
 	# Set data on PUT resource /3201/0/5853 (pattern of LED blink)
-    print('update_blink_pattern ',sid, data)
+    print('update_blink_pattern ',data)
     e = connector.putResourceValue(data['endpointName'],'/3201/0/5853',data['blinkPattern'])
     while not e.isDone():
     	None
@@ -86,10 +88,10 @@ def updateBlinkPattern(sid, data):
 	    print("Error: ",e.error.errType, e.error.error, e.raw_data)
     	
 
-@sio.on('blink')
-def blink(sid, data):
-	# Trigger POST resource /3201/0/5850 (start blinking LED)
-    print('blink: ',sid, data)
+@socketio.on('blink')
+def blink(data):
+	# POST to resource /3201/0/5850 (start blinking LED)
+    print('blink: ',data)
     e = connector.postResource(data['endpointName'],'/3201/0/5850')
     while not e.isDone():
     	None
@@ -98,19 +100,16 @@ def blink(sid, data):
 
 # 'notifications' are routed here, handle subscriptions and update webpage
 def notificationHandler(data):
+	global socketio
 	print "\r\nNotification Data Received : %s" %data['notifications']
 	notifications = data['notifications']
-	constructedList = {}
 	for thing in notifications:
-		ep = thing['ep']
-		emit = {"endpointName":thing["ep"],"value":b64decode(thing["payload"])}
-		print emit
-		sio.emit('presses',emit,room='globalRoom')
+		stuff = {"endpointName":thing["ep"],"value":b64decode(thing["payload"])}
+		print "Emitting :",stuff
+		socketio.emit('presses',stuff)
 
 if __name__ == "__main__":
-	#connector.deleteAllSubscriptions()
+	connector.deleteAllSubscriptions()							# remove all subscriptions, start fresh
 	connector.startLongPolling()								# start long polling connector.mbed.com
 	connector.setHandler('notifications', notificationHandler) 	# send 'notifications' to the notificationHandler FN
-	app = socketio.Middleware(sio, app)							# wrap Flask application with socketio's middleware
-	eventlet.wsgi.server(eventlet.listen(('', 8080)), app) 		# deploy as an eventlet WSGI server
-	
+	socketio.run(app,host='0.0.0.0', port=8080)
