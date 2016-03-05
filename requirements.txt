@@ -1,0 +1,5 @@
+python-2.7.11
+mbed-connector-api
+pybars
+flask
+flask_socketio
