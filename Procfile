@@ -1,1 +1,1 @@
-web: gunicorn --pythonpath app connector_quickstart:app
+web: python app.py
