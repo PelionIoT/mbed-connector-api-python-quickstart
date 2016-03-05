@@ -46,6 +46,7 @@ def subscribeToPresses(data):
 	while not e.isDone():
 		None
 	if e.error:
+		pass
 		#print("Error: ",e.error.errType, e.error.error, e.raw_data)
 	else:
 		#print("Subscribed Successfully!")
@@ -58,8 +59,10 @@ def unsubscribeToPresses(data):
 	while not e.isDone():
 		None
 	if e.error:
+		pass
 		#print("Error: ",e.error.errType, e.error.error, e.raw_data)
 	else:
+		pass
 		#print("Unsubscribed Successfully!")
 	emit('unsubscribed-to-presses',{"endpointName":data['endpointName'],"value":'True'})
     
@@ -71,6 +74,7 @@ def getPresses(data):
 	while not e.isDone():
 		None
 	if e.error:
+		pass
 		#print("Error: ",e.error.errType, e.error.error, e.raw_data)
 	else:
 		data_to_emit = {"endpointName":data['endpointName'],"value":e.result}
@@ -85,6 +89,7 @@ def updateBlinkPattern(data):
     while not e.isDone():
     	None
     if e.error:
+    	pass
 	    #print("Error: ",e.error.errType, e.error.error, e.raw_data)
     	
 
@@ -96,6 +101,7 @@ def blink(data):
     while not e.isDone():
     	None
     if e.error:
+    	pass
     	#print("Error: ",e.error.errType, e.error.error, e.raw_data)
 
 # 'notifications' are routed here, handle subscriptions and update webpage
