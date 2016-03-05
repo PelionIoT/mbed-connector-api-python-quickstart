@@ -15,12 +15,12 @@ def index():
 	# get list of endpoints, for each endpoint get the pattern (/3201/0/5853) value
 	epList = connector.getEndpoints().result
 	for index in range(len(epList)):
-		print "Endpoint Found: ",epList[index]['name']
+		#print "Endpoint Found: ",epList[index]['name']
 		e = connector.getResourceValue(epList[index]['name'],"/3201/0/5853")
 		while not e.isDone():
 			None
 		epList[index]['blinkPattern'] = e.result
-	print "Endpoint List :",epList
+	#print "Endpoint List :",epList
 	# fill out html using handlebar template
 	handlebarJSON = {'endpoints':epList}
 	comp = pybars.Compiler()
@@ -30,82 +30,82 @@ def index():
 
 @socketio.on('connect')
 def connect():
-	print('connect ')
+	#print('connect ')
 	join_room('room')
 
 @socketio.on('disconnect')
 def disconnect():
-	print('Disconnect')
+	#print('Disconnect')
 	leave_room('room')
 
 @socketio.on('subscribe_to_presses')
 def subscribeToPresses(data):
 	# Subscribe to all changes of resource /3200/0/5501 (button presses)
-	print('subscribe_to_presses: ',data)
+	#print('subscribe_to_presses: ',data)
 	e = connector.putResourceSubscription(data['endpointName'],'/3200/0/5501')
 	while not e.isDone():
 		None
 	if e.error:
-		print("Error: ",e.error.errType, e.error.error, e.raw_data)
+		#print("Error: ",e.error.errType, e.error.error, e.raw_data)
 	else:
-		print("Subscribed Successfully!")
+		#print("Subscribed Successfully!")
 		emit('subscribed-to-presses')
 
 @socketio.on('unsubscribe_to_presses')
 def unsubscribeToPresses(data):
-	print('unsubscribe_to_presses: ',data)
+	#print('unsubscribe_to_presses: ',data)
 	e = connector.deleteResourceSubscription(data['endpointName'],'/3200/0/5501')
 	while not e.isDone():
 		None
 	if e.error:
-		print("Error: ",e.error.errType, e.error.error, e.raw_data)
+		#print("Error: ",e.error.errType, e.error.error, e.raw_data)
 	else:
-		print("Unsubscribed Successfully!")
+		#print("Unsubscribed Successfully!")
 	emit('unsubscribed-to-presses',{"endpointName":data['endpointName'],"value":'True'})
     
 @socketio.on('get_presses')
 def getPresses(data):
 	# Read data from GET resource /3200/0/5501 (num button presses)
-	print("get_presses ",data)
+	#print("get_presses ",data)
 	e = connector.getResourceValue(data['endpointName'],'/3200/0/5501')
 	while not e.isDone():
 		None
 	if e.error:
-		print("Error: ",e.error.errType, e.error.error, e.raw_data)
+		#print("Error: ",e.error.errType, e.error.error, e.raw_data)
 	else:
 		data_to_emit = {"endpointName":data['endpointName'],"value":e.result}
-		print data_to_emit
+		#print data_to_emit
 		emit('presses', data_to_emit)
     
 @socketio.on('update_blink_pattern')
 def updateBlinkPattern(data):
 	# Set data on PUT resource /3201/0/5853 (pattern of LED blink)
-    print('update_blink_pattern ',data)
+    #print('update_blink_pattern ',data)
     e = connector.putResourceValue(data['endpointName'],'/3201/0/5853',data['blinkPattern'])
     while not e.isDone():
     	None
     if e.error:
-	    print("Error: ",e.error.errType, e.error.error, e.raw_data)
+	    #print("Error: ",e.error.errType, e.error.error, e.raw_data)
     	
 
 @socketio.on('blink')
 def blink(data):
 	# POST to resource /3201/0/5850 (start blinking LED)
-    print('blink: ',data)
+    #print('blink: ',data)
     e = connector.postResource(data['endpointName'],'/3201/0/5850')
     while not e.isDone():
     	None
     if e.error:
-    	print("Error: ",e.error.errType, e.error.error, e.raw_data)
+    	#print("Error: ",e.error.errType, e.error.error, e.raw_data)
 
 # 'notifications' are routed here, handle subscriptions and update webpage
 def notificationHandler(data):
 	global socketio
-	print "\r\nNotification Data Received : %s" %data['notifications']
+	#print "\r\nNotification Data Received : %s" %data['notifications']
 	notifications = data['notifications']
 	for thing in notifications:
 		stuff = {"endpointName":thing["ep"],"value":b64decode(thing["payload"])}
-		print "Emitting :",stuff
+		#print "Emitting :",stuff
 		socketio.emit('presses',stuff)
 
 if __name__ == "__main__":
