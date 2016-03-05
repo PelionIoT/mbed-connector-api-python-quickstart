@@ -1,5 +1,6 @@
 python-2.7.11
-mbed-connector-api
-pybars
-flask
-flask_socketio
+mbed-connector-api==1.0
+pybars==0.0.4
+Flask==0.10.1
+Flask-SocketIO==2.1
+requests==2.9.1
