@@ -1,4 +1,3 @@
-python-2.7.11
 mbed-connector-api==1.0
 pybars==0.0.4
 Flask==0.10.1
