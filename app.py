@@ -3,11 +3,16 @@ import pybars 							# use to fill in handlebar templates
 from   flask 			import Flask	# framework for hosting webpages
 from   flask_socketio 	import SocketIO, emit,send,join_room, leave_room  
 from   base64 			import standard_b64decode as b64decode
+import os
 
 app = Flask(__name__)
 socketio = SocketIO(app,async_mode='threading')
 
-token = "ChangeMe" # replace with your API token
+if os.environ['ACCESS_KEY']:
+	token = os.environ['ACCESS_KEY']
+else:
+	token = "ChangeMe" # replace with your API token
+
 connector = mbed_connector_api.connector(token)
 
 @app.route('/')
