@@ -1,4 +1,5 @@
 gunicorn
+eventlet
 mbed-connector-api
 pybars
 Flask

@@ -4,9 +4,12 @@ from   flask 			import Flask	# framework for hosting webpages
 from   flask_socketio 	import SocketIO, emit,send,join_room, leave_room  
 from   base64 			import standard_b64decode as b64decode
 import os
+import eventlet
+
+eventlet.monkey_patch()
 
 app = Flask(__name__)
-socketio = SocketIO(app,async_mode='threading')
+socketio = SocketIO(app,async_mode='eventlet')
 
 if os.environ['ACCESS_KEY']:
 	token = os.environ['ACCESS_KEY']
