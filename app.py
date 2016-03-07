@@ -8,10 +8,10 @@ import os
 app = Flask(__name__)
 socketio = SocketIO(app,async_mode='threading')
 
-if not os.environ['ACCESS_KEY']:
-	token = "ChangeMe" # replace with your API token
-else:
+if os.environ['ACCESS_KEY']:
 	token = os.environ['ACCESS_KEY']
+else:
+	token = "ChangeMe" # replace with your API token
 
 connector = mbed_connector_api.connector(token)
 
