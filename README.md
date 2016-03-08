@@ -4,7 +4,7 @@ The goal of this application is to get the user up and running, using the mbed-c
 The quickstart webapp is meant to be paired with the [quickstart embedded app](https://github.com/ARMmbed/mbed-client-quickstart). The quickstart web app will allow the user to visualize quickstart embedded devices and interact with them. 
 
 ### Pre-requisites
-- A [mbed connector](https://www.connector.mbed.com) account and have generated an API token
+- A [mbed connector](https://connector.mbed.com) account and have generated an API token
 - A endpoint running the [mbed client quickstart example]()
 - Install the required packages `pip install -r requirements.txt`
 
