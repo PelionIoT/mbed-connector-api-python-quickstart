@@ -1,10 +1,10 @@
 # mbed-connector-python-quickstart
-This is a quickstart application for the [mbed-connector-python](https://github.com/armmbed/mbed-connector-python) package. 
+This is a quickstart application for the [mbed-connector-api-python](https://github.com/armmbed/mbed-connector-api-python) package. 
 The goal of this application is to get the user up and running, using the mbed-connector-python package and talking to devices through mbed Device Connector in under 5 min, 5 steps or less.
-The quickstart webapp is meant to be paired with the [quickstart embedded app](https://github.com/ARMmbed/mbed-client-examples). The quickstart web app will allow the user to visualize quickstart embedded devices and interact with them. 
+The quickstart webapp is meant to be paired with the [quickstart embedded app](https://github.com/ARMmbed/mbed-client-quickstart). The quickstart web app will allow the user to visualize quickstart embedded devices and interact with them. 
 
 ### Pre-requisites
-- A [mbed connector](www.connector.mbed.com) account and have generated an API token
+- A [mbed connector](https://www.connector.mbed.com) account and have generated an API token
 - A endpoint running the [mbed client quickstart example]()
 - Install the required packages `pip install -r requirements.txt`
 
