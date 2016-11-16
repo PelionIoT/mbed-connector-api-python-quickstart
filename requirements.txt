@@ -1,6 +1,6 @@
 gevent==1.0.1
 gevent-websocket==0.9.3
-gunicorn==0.16.1
+gunicorn==18.0
 eventlet==0.18.4
 pip>=8.0.0
 mbed-connector-api>=1.0.1
