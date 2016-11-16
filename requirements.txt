@@ -1,4 +1,4 @@
-gunicorn
+gunicorn==0.16.1
 eventlet
 pip>=8.0.0
 mbed-connector-api>=1.0.1
