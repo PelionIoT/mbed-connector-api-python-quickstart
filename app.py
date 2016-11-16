@@ -11,8 +11,8 @@ eventlet.monkey_patch()
 app = Flask(__name__)
 socketio = SocketIO(app,async_mode='eventlet')
 
-if os.environ['ACCESS_KEY']:
-	token = os.environ['ACCESS_KEY']
+if 'ACCESS_KEY' in os.environ.keys():
+	token = os.environ['ACCESS_KEY'] # get access key from environment variable
 else:
 	token = "ChangeMe" # replace with your API token
 
