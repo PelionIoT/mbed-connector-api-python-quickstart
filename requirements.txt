@@ -1,6 +1,5 @@
 gevent==1.0.1
 gevent-websocket==0.9.3
-python-socketio==1.0
 gunicorn==0.16.1
 eventlet==0.18.4
 pip>=8.0.0
